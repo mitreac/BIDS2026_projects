@@ -118,7 +118,7 @@ Clearly state your question, your analytical approach, your result, and your int
 
 ---
 
-## Project Option 3: Prostate Cancer Transcriptomic Subtyping
+## Project Option 2: Prostate Cancer Transcriptomic Subtyping
 
 ### Overview
 
@@ -228,6 +228,136 @@ Clearly state your question, analytical approach, result, and interpretation.
 
 ---
 
+# Project Option 3: Tumor Microenvironment Mapping in Prostate Cancer Using Single-Cell RNA-seq
+
+## Overview
+
+The immune landscape of a tumor is not static — it shifts with disease progression, histological grade, and clinical outcome. This project asks: *does immune cell composition in prostate tumors change with clinical risk?* You will access public single-cell RNA-seq (scRNA-seq) data from prostate cancer patients, reconstruct the tumor microenvironment (TME) through cell-type deconvolution and clustering, and test whether the abundance of specific immune populations — cytotoxic T cells, regulatory T cells, macrophage polarization states, NK cells, or myeloid-derived suppressor cells — correlates with Gleason score or biochemical recurrence status.
+
+---
+
+## Learning Objectives
+
+* Navigate public scRNA-seq repositories (GEO, Zenodo) to locate and evaluate suitable prostate cancer datasets
+* Apply standard single-cell analysis pipelines (quality control, normalization, dimensionality reduction, clustering)
+* Annotate cell clusters using canonical marker genes for major tumor microenvironment populations
+* Quantify cell-type abundance per patient and link it to clinical metadata
+* Perform statistical association tests between TME composition and clinical risk variables
+
+---
+
+## Required Datasets
+
+Download at least one of the following publicly available prostate cancer scRNA-seq datasets:
+
+| Accession | Description |
+| --- | --- |
+| [GSE141445](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE141445) | scRNA-seq of human prostate tumors and adjacent normal tissue |
+| [GSE176031](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE176031) | Single-cell profiling of prostate cancer TME across risk groups |
+| *(your choice)* | At least 1 additional prostate cancer or relevant pan-cancer scRNA-seq dataset |
+
+You are **required** to identify and include at least one additional dataset of your choice. Justify your selection briefly in your report (e.g., shared tissue type, complementary clinical annotations, or overlapping patient risk strata).
+
+**Data access:** Use the `GEOquery` R package or download count matrices directly from the GEO web interface. For Python, `scanpy` and `anndata` are the recommended ecosystem.
+
+---
+
+## Part 1: Data Acquisition and Quality Control
+
+Before any analysis, critically inspect each dataset:
+
+* What tissue compartment was profiled (tumor core, adjacent normal, peripheral blood)?
+* What single-cell platform was used (10x Chromium, Smart-seq2, etc.)?
+* What clinical metadata is available — is Gleason score, PSA, or recurrence status recorded per patient?
+
+Perform standard per-cell QC:
+
+* Filter cells by number of detected genes, total UMI counts, and mitochondrial read fraction
+* Identify and remove likely doublets (e.g., using `DoubletFinder` or `scrublet`)
+* Generate QC summary plots (violin plots, scatter plots) before and after filtering
+
+> **Checkpoint question:** How do QC thresholds differ across datasets or patients, and what does this variability imply for cross-sample comparisons?
+
+---
+
+## Part 2: Preprocessing, Dimensionality Reduction, and Clustering
+
+Apply a standard single-cell preprocessing pipeline to each dataset:
+
+* Normalize (e.g., scran normalization or library-size normalization to 10,000 counts per cell)
+* Log-transform and identify highly variable genes (typically 2,000–5,000)
+* Scale data and apply PCA; use the elbow plot to select the number of principal components
+* Construct a k-nearest neighbor graph and apply UMAP or t-SNE for visualization
+* Cluster cells using Leiden or Louvain community detection; explore a range of resolution parameters
+
+Visualize clusters colored by sample of origin, patient, and clinical group. Evaluate whether any clusters are driven by technical rather than biological factors.
+
+---
+
+## Part 3: Cell-Type Annotation of the Tumor Microenvironment
+
+Annotate each cluster using canonical marker genes for the major TME cell populations:
+
+| Cell Type | Example Markers |
+| --- | --- |
+| CD8+ cytotoxic T cells | *CD8A*, *GZMB*, *PRF1* |
+| CD4+ T helper / Tregs | *CD4*, *FOXP3*, *IL2RA* |
+| NK cells | *NCAM1*, *KLRB1*, *NKG7* |
+| Macrophages (M1/M2) | *CD68*, *CD163*, *MRC1*, *IL1B* |
+| Dendritic cells | *CLEC9A*, *FCER1A*, *CD1C* |
+| B cells | *CD19*, *MS4A1* |
+| Myeloid-derived suppressor cells | *S100A8*, *S100A9*, *ITGAM* |
+| Epithelial / tumor cells | *KLK3* (PSA), *AMACR*, *NKX3-1* |
+| Fibroblasts / stroma | *COL1A1*, *FAP*, *ACTA2* |
+
+Generate dot plots and feature plots for each marker set. Produce a final annotated UMAP. Quantify each patient's cell-type composition as a proportion of total profiled cells.
+
+> **Checkpoint question:** Are any cell populations absent or dramatically underrepresented in certain samples? Is this likely biological or a technical artifact of the profiling protocol?
+
+---
+
+## Part 4: Linking TME Composition to Clinical Risk
+
+Using your per-patient cell-type proportion matrix and the associated clinical metadata:
+
+* Define clinical groupings for at least **two** of the following variables:
+
+| Variable | Grouping |
+| --- | --- |
+| Gleason score | ≤6 (low risk), 7 (intermediate), ≥8 (high risk) |
+| Biochemical recurrence | Recurrent vs. non-recurrent |
+| Pathologic T stage | Organ-confined (pT2) vs. extraprostatic (pT3/T4) |
+| PSA at diagnosis | <10, 10–20, >20 ng/mL |
+
+* Test for differences in cell-type abundance across groups using Wilcoxon rank-sum tests or linear models; apply multiple testing correction (Benjamini-Hochberg)
+* Generate box plots or violin plots of cell-type proportions stratified by clinical group
+* Compute a pairwise correlation matrix of all cell-type proportions; visualize as a heatmap
+
+> **Reflection question:** Which immune populations most strongly track with clinical risk? Are these associations consistent across datasets, or dataset-specific?
+
+---
+
+## Part 5: Your Original Research Question
+
+Formulate and answer **one novel question** using the data you have collected. Your question must go beyond the steps above. Examples of the *type* of question expected (do not simply copy these):
+
+* Within the macrophage compartment, do M1-like and M2-like states shift in proportion with Gleason score, and does this polarization ratio predict recurrence better than total macrophage abundance?
+* Are there T cell exhaustion signatures (e.g., *PDCD1*, *HAVCR2*, *TIGIT*) enriched in high-Gleason tumors, and does exhaustion score correlate with CD8+ T cell abundance?
+* Can you identify a small panel of cell-type proportion features that classifies high-risk from low-risk patients with reasonable accuracy using a simple classifier?
+* Do immune composition patterns differ between tumor core and adjacent normal tissue within the same patient, and does this difference vary with clinical stage?
+
+Clearly state your question, your analytical approach, your result, and your interpretation.
+
+---
+
+## Deliverables
+
+* A written report (~2–3 pages, not counting figures) covering all five parts
+* All figures: QC plots, UMAP with cell-type annotations, marker dot plots, proportion box plots, association test results
+* A brief methods section describing tools, versions, and key parameter choices
+* Well-commented code (R script using `Seurat`/`SingleCellExperiment`, Python script using `scanpy`, or a Jupyter/Rmd notebook)
+
+---
 ---
 
 ## AI Assistance: University of Michigan Resources
